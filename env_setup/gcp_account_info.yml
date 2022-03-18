@@ -1,3 +1,0 @@
-service_account_file: key.json
-project: "pa-ansible-cd"
-auth_kind: serviceaccount
