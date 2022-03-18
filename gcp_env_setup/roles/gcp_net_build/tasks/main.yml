@@ -1,0 +1,69 @@
+---
+# tasks file for gcp_net_build
+- name: Create a New GCP VPC
+  gcp_compute_network:
+    name: "{{ vpc_name | regex_replace('_','-') }}"
+    routing_config:
+      routing_mode: "REGIONAL"
+    auto_create_subnetworks: no
+    state: present
+    auth_kind: "{{ auth_kind }}"
+    project: "{{ project }}"
+    service_account_file: "{{ service_account_file }}"
+  register: gcp_vpc
+  tags: gcp_vpc
+
+- name: Create Subnets
+  gcp_compute_subnetwork:
+    name: "{{ subnet.name }}"
+    ip_cidr_range: "{{ subnet.cidr }}"
+    network: "{{ gcp_vpc }}"
+    region: "{{ subnet.region }}"
+    state: present
+    auth_kind: "{{ auth_kind }}"
+    project: "{{ project }}"
+    service_account_file: "{{ service_account_file }}"
+  loop: "{{ subnets }}"
+  loop_control:
+    loop_var: subnet
+  register: gcp_subnets
+
+- name: Create Allow Firewall Rules
+  gcp_compute_firewall:
+    name: "{{ rule.name | regex_replace('_','-') }}"
+    network: {selfLink: "{{ gcp_vpc.selfLink }}"}
+    priority: "{{ rule.priority | default(omit) }}"
+    direction: "{{ rule.direction | upper | mandatory }}"
+    allowed:
+      - ip_protocol: "{{ rule.protocol }}"
+        ports: "{{ (rule.port|string).split(',') }}"
+    source_ranges: "{{ rule.src | default(omit) }}"
+    source_tags: "{{ omit if rule.src_tag is not defined else rule.src_tag.split(',') }}"
+    destination_ranges: "{{ rule.dest | default(omit) }}" 
+    target_tags: "{{ omit if rule.apply_to is not defined else rule.apply_to.split(',')  }}"
+    auth_kind: "{{ auth_kind }}"
+    project: "{{ project }}"
+    service_account_file: "{{ service_account_file }}"
+  loop: "{{ fw_rules | selectattr('type', 'equalto','allow') | list }}"
+  loop_control:
+    loop_var: rule
+  tags: gcp_fw_rules
+
+- name: Create Router
+  gcp_compute_router:
+    name: "{{ router_name }}"
+    network: {selfLink: "{{ gcp_vpc.selfLink }}"}
+    region: "asia-southeast2"
+    auth_kind: "{{ auth_kind }}"
+    project: "{{ project }}"
+    service_account_file: "{{ service_account_file }}"
+    state: present
+  register: router
+
+- name: Check Cloud Nats Exists
+  ansible.builtin.command: gcloud compute routers nats list --router={{ router_name }} --region=asia-southeast2
+  register: cloud_nat
+
+- name: Create Cloud NAT
+  ansible.builtin.command: gcloud compute routers nats create {{ cloud_nat_name }} --router {{ router_name }} --auto-allocate-nat-external-ips --nat-all-subnet-ip-ranges --enable-logging --region asia-southeast2
+  when: (router.failed == false) and (cloud_nat.stdout.find('{{ cloud_nat_name }}') == -1)

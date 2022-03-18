@@ -1,0 +1,48 @@
+---
+- name: Decommission GCP Resources
+  hosts: gcp_vpc
+  connection: local
+  force_handlers: True
+  environment:
+    GCP_SERVICE_ACCOUNT_FILE: "{{ service_account_file }}"
+    GCP_AUTH_KIND: 'serviceaccount'
+  vars_files:
+    - gcp_account_info.yml
+  tasks:
+    - name: Read the Vault Encrypted JSON file
+      copy:
+        content: "{{ lookup('file', 'credentials.json') }}"
+        dest: "{{ service_account_file }}"
+      notify: Clean tmp Decrypted Files
+      tags: always
+
+    - name: Get VPC Facts
+      gcp_compute_network_facts:
+        project: "{{ project }}"
+      register: gcp_vpc
+    
+    - name: Terminate Instance {{ node.name }}
+      gcp_compute_instance:
+        name: "{{ node.name | regex_replace('_','-') }}"
+        zone: "{{ node.zone }}"
+        project: "{{ project }}"
+        state: present
+        status: TERMINATED
+      loop: "{{ compute_nodes }}"
+      loop_control:
+        loop_var: node
+    
+    - name: Check Cloud Nats Exists
+      ansible.builtin.command: gcloud compute routers nats list --router={{ router_name }} --region=asia-southeast2
+      register: cloud_nat
+      ignore_errors: true
+
+    - name: Delete Cloud NAT
+      ansible.builtin.command: gcloud compute routers nats delete {{ cloud_nat_name }} --router {{ router_name }} --region asia-southeast2
+      when: cloud_nat is not failed and cloud_nat.stdout.find('{{ cloud_nat_name }}') != -1
+    
+  handlers:
+    - name: Clean tmp Decrypted Files
+      file:
+        path: "{{ service_account_file }}"
+        state: absent

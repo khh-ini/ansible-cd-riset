@@ -1,0 +1,12 @@
+[production]
+prod-server-1
+prod-server-2
+
+[development]
+dev-server
+
+[database]
+db-server
+
+[load_balancer]
+lb_server

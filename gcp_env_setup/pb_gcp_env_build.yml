@@ -1,0 +1,33 @@
+---
+- name: Build GCP environment
+  hosts: gcp_vpc
+  connection: local
+  gather_facts: no
+  force_handlers: true
+  vars_files:
+    - gcp_account_info.yml
+  tasks:
+    - name: Read the Vault Encrypted JSON file
+      copy:
+        content: "{{ lookup('file', 'credentials.json') }}"
+        dest: "{{ service_account_file }}"
+      notify: Clean tmp Decrypted Files
+      tags: always
+
+    - name: Build GCP Network
+      import_role:
+        name: gcp_net_build
+      tags: gcp_net_build
+    
+    - name: Build VM Instances
+      include_role:
+        name: gcp_vm_build
+      loop: "{{ compute_nodes }}"
+      loop_control:
+        loop_var: node
+
+  handlers:
+    - name: Clean tmp Decrypted Files
+      file:
+        path: "{{ service_account_file }}"
+        state: absent
