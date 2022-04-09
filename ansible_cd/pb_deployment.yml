@@ -8,10 +8,12 @@
       copy:
         src: /etc/haproxy/haproxy.cfg.disable-prod-1
         dest: /etc/haproxy/haproxy.cfg
+      when: inventory_hostname == 'lb-server'
       
     - service:
         name: haproxy
         state: restarted
+      when: inventory_hostname == 'lb-server'
 
     - name: Updating App in Production Server
       docker_container:
