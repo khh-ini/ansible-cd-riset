@@ -5,13 +5,10 @@
   force_handlers: true
   tasks:
     - name: Removing Production Server 1 from Pools
-      haproxy:
+      community.general.haproxy:
         state: disabled
         host: 'prod-server-1'
         backend: prod_back
-        wait: yes
-        wait_retries: 10
-        wait_interval: 5
       register: disabled_prod1
       when: inventory_hostname == 'lb-server'
 
