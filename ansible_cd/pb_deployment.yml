@@ -21,14 +21,14 @@
           MONGO_DATABASE: "{{MONGO_DATABASE}}"
         published_ports:
           - 80:8080
-      register: prod-1-deployment
+      register: prod1_deployment
       when: inventory_hostname == 'prod-server-1'
 
     - name: Checking App in Production Server 1 Ready for Handling Request
       uri:
         url: http://localhost/hallo
-      register: prod-1-hc
-      when: inventory_hostname == 'prod-server-1' and prod-1-deployment is succeeded
+      register: prod1_hc
+      when: inventory_hostname == 'prod-server-1' and prod1_deployment is succeeded
     
     # - name: Add Production Server 1 to Pools and Removing Production Server 1 from Pools
     #   ping:
@@ -47,13 +47,14 @@
           MONGO_DATABASE: "{{MONGO_DATABASE}}"
         published_ports:
           - 80:8080
-      register: prod-2-deployment
+      register: prod2_deployment
       when: inventory_hostname == 'prod-server-2' and prod-1-hc is succeeded
 
     - name: Checking App in Production Server 2 Ready for Handling Request
       uri:
         url: http://localhost/hallo
-      when: inventory_hostname == 'prod-server-2' and prod-2-deployment is succeeded
+      register: prod2_hc
+      when: inventory_hostname == 'prod-server-2' and prod2_deployment is succeeded
 
     # - name: Add Production Server 2 to Pools
     #   ping:
