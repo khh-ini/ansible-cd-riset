@@ -25,7 +25,7 @@
 
     - name: Checking App in Production Server 1 Ready for Handling Request
       uri:
-        url: http://localhost
+        url: http://localhost/hallo
       when: inventory_hostname == 'prod-server-1'
     
     # - name: Add Production Server 1 to Pools and Removing Production Server 1 from Pools
@@ -49,7 +49,7 @@
 
     - name: Checking App in Production Server 2 Ready for Handling Request
       uri:
-        url: http://localhost
+        url: http://localhost/hallo
       when: inventory_hostname == 'prod-server-2'
 
     # - name: Add Production Server 2 to Pools
