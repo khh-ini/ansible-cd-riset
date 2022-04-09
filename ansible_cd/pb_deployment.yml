@@ -9,6 +9,7 @@
         state: disabled
         host: prod-server-1
         backend: prod_back
+      become: yes
       when: inventory_hostname == 'prod-server-1' 
 
     - name: Updating App in Production Server
