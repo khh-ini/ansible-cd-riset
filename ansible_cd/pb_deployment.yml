@@ -4,13 +4,20 @@
   gather_facts: no
   force_handlers: true
   tasks:
-    - name: Disable server in 'www' backend pool
-      community.general.haproxy:
-        state: disabled
-        host: prod-server-1
-        backend: prod_back
+    - name: Removing Production Server 1 from Pools
+      copy:
+        src: /etc/haproxy/haproxy.cfg.disable-prod-1
+        dest: /etc/haproxy/haproxy.cfg
+        remote_src: yes
       become: yes
-      when: inventory_hostname == 'prod-server-1' 
+      when: inventory_hostname == 'lb-server'
+      
+      
+    - service:
+        name: haproxy
+        state: restarted
+      become: yes
+      when: inventory_hostname == 'lb-server'
 
     - name: Updating App in Production Server
       docker_container:
