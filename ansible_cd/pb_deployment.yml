@@ -83,7 +83,7 @@
 
     - name: Add Production Server 2 to Pools
       copy:
-        src: /etc/haproxy/haproxy.cfg.enalbe-all
+        src: /etc/haproxy/haproxy.cfg.enable-all
         dest: /etc/haproxy/haproxy.cfg
         remote_src: yes
       become: yes
