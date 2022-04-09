@@ -12,7 +12,7 @@
       docker_container:
         name: go-recipes-api
         image: "khhini/go-recipes-api:{{IMAGE_TAG}}"
-        state: stopped
+        state: started
         recreate: yes
         env: 
           REDIS_SERVER: "{{REDIS_SERVER}}"
@@ -38,7 +38,7 @@
       docker_container:
         name: go-recipes-api
         image: "khhini/go-recipes-api:{{IMAGE_TAG}}"
-        state: absent
+        state: started
         recreate: yes
         env: 
           REDIS_SERVER: "{{REDIS_SERVER}}"
@@ -48,7 +48,7 @@
         published_ports:
           - 80:8080
       register: prod2_deployment
-      when: inventory_hostname == 'prod-server-2' #and prod1_hc is succeeded
+      when: inventory_hostname == 'prod-server-2' and prod1_hc is succeeded
 
     - name: Checking App in Production Server 2 Ready for Handling Request
       uri:
