@@ -1,12 +1,15 @@
 [production]
-prod-server-1
-prod-server-2
+prod-server-1 ansible_user=ansiblecd
+prod-server-2 ansible_user=ansiblecd
 
 [development]
-dev-server
+dev-server ansible_user=ansiblecd
 
 [database]
-db-server
+db-server ansible_user=ansiblecd
 
 [load_balancer]
-lb_server
+lb-server ansible_user=ansiblecd
+
+#[localhost]
+#localhost ansible_user=ansiblecd
