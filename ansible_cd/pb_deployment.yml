@@ -4,9 +4,15 @@
   gather_facts: no
   force_handlers: true
   tasks:
-    # - name: Removing Production Server 1 from Pools
-    #   ping:
-    #   when: inventory_hostname == 'lb-server'
+    - name: Removing Production Server 1 from Pools
+      community.general.haproxy:
+        state: disabled
+        host: 'prod-server-1'
+        backend: prod_back
+        wait: yes
+        wait_retries: 10
+        wait_interval: 5
+      register: disabled_prod1
 
     - name: Updating App in Production Server
       docker_container:
@@ -22,7 +28,7 @@
         published_ports:
           - 80:8080
       register: prod1_deployment
-      when: inventory_hostname == 'prod-server-1'
+      when: inventory_hostname == 'prod-server-1' and disabled_prod1 is succeeded
 
     - name: Checking App in Production Server 1 Ready for Handling Request
       uri:
