@@ -11,14 +11,14 @@
     - name: Updating App in Production Server
       docker_container:
         name: go-recipes-api
-        image: khhini/go-recipes-api:{{IMAGE_TAG}}
+        image: "khhini/go-recipes-api:{{IMAGE_TAG}}"
         state: present
         recreate: yes
         env: 
-          - REDIS_SERVER={{REDIS_SERVER}}
-          - JWT_SECRET={{JWT_SECRET}}
-          - MONGO_URI={{MONGO_URI}}
-          - MONGO_DATABASE={{MONGO_DATABASE}}
+          REDIS_SERVER: "{{REDIS_SERVER}}"
+          JWT_SECRET: "{{JWT_SECRET}}"
+          MONGO_URI: "{{MONGO_URI}}"
+          MONGO_DATABASE: "{{MONGO_DATABASE}}"
         published_ports:
           - 80:8080
       when: inventory_hostname == 'prod-server-1'
@@ -34,14 +34,14 @@
     - name: Updating App in Production Server 2
       docker_container:
         name: go-recipes-api
-        image: khhini/go-recipes-api:{{IMAGE_TAG}}
+        image: "khhini/go-recipes-api:{{IMAGE_TAG}}"
         state: present
         recreate: yes
         env: 
-          - REDIS_SERVER={{REDIS_SERVER}}
-          - JWT_SECRET={{JWT_SECRET}}
-          - MONGO_URI={{MONGO_URI}}
-          - MONGO_DATABASE={{MONGO_DATABASE}}
+          REDIS_SERVER: "{{REDIS_SERVER}}"
+          JWT_SECRET: "{{JWT_SECRET}}"
+          MONGO_URI: "{{MONGO_URI}}"
+          MONGO_DATABASE: "{{MONGO_DATABASE}}"
         published_ports:
           - 80:8080
       when: inventory_hostname == 'prod-server-2'
