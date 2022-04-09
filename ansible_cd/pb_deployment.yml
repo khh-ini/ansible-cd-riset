@@ -8,6 +8,7 @@
       copy:
         src: /etc/haproxy/haproxy.cfg.disable-prod-1
         dest: /etc/haproxy/haproxy.cfg
+        remote_src: yes
       when: inventory_hostname == 'lb-server'
       
     - service:
