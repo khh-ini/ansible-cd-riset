@@ -12,7 +12,7 @@
       docker_container:
         name: go-recipes-api
         image: "khhini/go-recipes-api:{{IMAGE_TAG}}"
-        state: present
+        state: started
         recreate: yes
         env: 
           REDIS_SERVER: "{{REDIS_SERVER}}"
@@ -35,7 +35,7 @@
       docker_container:
         name: go-recipes-api
         image: "khhini/go-recipes-api:{{IMAGE_TAG}}"
-        state: present
+        state: started
         recreate: yes
         env: 
           REDIS_SERVER: "{{REDIS_SERVER}}"
