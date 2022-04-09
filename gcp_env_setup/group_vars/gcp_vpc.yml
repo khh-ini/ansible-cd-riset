@@ -2,6 +2,7 @@
 vpc_name: pa-ansible-cd
 router_name: pac-router
 cloud_nat_name: pac-nat
+service_account_file: key.json
 
 subnets:
   - name: pac-subnet
@@ -33,35 +34,35 @@ compute_node_image: projects/ubuntu-os-cloud/global/images/family/ubuntu-minimal
 compute_node_image_size: 10
 
 compute_nodes: 
-  # - name: prod-server-1
-  #   ip: 10.1.1.31
-  #   network: pac-subnet
-  #   has_internet: no
-  #   startup_script: | 
-  #     #! /bin/bash
-  #     apt update
-  #     apt -y install iputils-ping docker.io vim
-  #     echo "10.1.1.31 prod-server-1" >> /etc/hosts
-  #     echo "10.1.1.32 prod-server-2" >> /etc/hosts
-  #     echo "10.1.1.20 db-server" >> /etc/hosts
-  #     echo "10.1.1.10 lb-server" >> /etc/hosts
-  #     echo "10.1.1.253 dev-server" >> /etc/hosts
-  #   zone: asia-southeast2-a
+  - name: prod-server-1
+    ip: 10.1.1.31
+    network: pac-subnet
+    has_internet: no
+    startup_script: | 
+      #! /bin/bash
+      apt update
+      apt -y install iputils-ping docker.io vim
+      echo "10.1.1.31 prod-server-1" >> /etc/hosts
+      echo "10.1.1.32 prod-server-2" >> /etc/hosts
+      echo "10.1.1.20 db-server" >> /etc/hosts
+      echo "10.1.1.10 lb-server" >> /etc/hosts
+      echo "10.1.1.253 dev-server" >> /etc/hosts
+    zone: asia-southeast2-a
   
-  # - name: prod-server-2
-  #   ip: 10.1.1.32
-  #   network: pac-subnet
-  #   has_internet: no
-  #   startup_script: | 
-  #     #! /bin/bash
-  #     apt update
-  #     apt -y install iputils-ping docker.io vim
-  #     echo "10.1.1.31 prod-server-1" >> /etc/hosts
-  #     echo "10.1.1.32 prod-server-2" >> /etc/hosts
-  #     echo "10.1.1.20 db-server" >> /etc/hosts
-  #     echo "10.1.1.10 lb-server" >> /etc/hosts
-  #     echo "10.1.1.253 dev-server" >> /etc/hosts
-  #   zone: asia-southeast2-a
+  - name: prod-server-2
+    ip: 10.1.1.32
+    network: pac-subnet
+    has_internet: no
+    startup_script: | 
+      #! /bin/bash
+      apt update
+      apt -y install iputils-ping docker.io vim
+      echo "10.1.1.31 prod-server-1" >> /etc/hosts
+      echo "10.1.1.32 prod-server-2" >> /etc/hosts
+      echo "10.1.1.20 db-server" >> /etc/hosts
+      echo "10.1.1.10 lb-server" >> /etc/hosts
+      echo "10.1.1.253 dev-server" >> /etc/hosts
+    zone: asia-southeast2-a
 
   # - name: db-server
   #   ip: 10.1.1.20
@@ -76,6 +77,11 @@ compute_nodes:
   #     echo "10.1.1.20 db-server" >> /etc/hosts
   #     echo "10.1.1.10 lb-server" >> /etc/hosts
   #     echo "10.1.1.253 dev-server" >> /etc/hosts
+  #     docker run --name mysql-db \
+  #       -e MYSQL_ROOT_PASSWORD=rootpass \
+  #       -e MYSQL_USER=dbuser \
+  #       -e MYSQL_PASSWORD=userpass \
+  #       -d mysql:8.0
   #   zone: asia-southeast2-a
 
   - name: dev-server
@@ -115,7 +121,7 @@ compute_nodes:
       echo "10.1.1.20 db-server" >> /etc/hosts
       echo "10.1.1.10 lb-server" >> /etc/hosts
       echo "10.1.1.253 dev-server" >> /etc/hosts
-      cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.backup
+      if ! grep -q dev_front haproxy.cfg; then cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.backup;fi
       cat <<EOF >> /etc/haproxy/haproxy.cfg
 
       frontend dev_front
@@ -156,5 +162,6 @@ compute_nodes:
           stats auth username:password
           stats uri /stats
       EOF
+      systemctl restart haproxy
 
     zone: asia-southeast2-a
