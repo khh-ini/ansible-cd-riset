@@ -17,7 +17,7 @@ fw_rules:
     src: 0.0.0.0/0
     apply_to: pac-subnet
     protocol: tcp
-    port: 80,443,8080
+    port: 80,443,8080,8001,27017
     state: present
 
   - name: allow_ssh_to_pac-subnet
@@ -41,7 +41,7 @@ compute_nodes:
     startup_script: | 
       #! /bin/bash
       apt update
-      apt -y install iputils-ping docker.io vim
+      apt -y install iputils-ping docker.io vim python3-pip
       echo "10.1.1.31 prod-server-1" >> /etc/hosts
       echo "10.1.1.32 prod-server-2" >> /etc/hosts
       echo "10.1.1.20 db-server" >> /etc/hosts
@@ -56,7 +56,7 @@ compute_nodes:
     startup_script: | 
       #! /bin/bash
       apt update
-      apt -y install iputils-ping docker.io vim
+      apt -y install iputils-ping docker.io vim python3-pip
       echo "10.1.1.31 prod-server-1" >> /etc/hosts
       echo "10.1.1.32 prod-server-2" >> /etc/hosts
       echo "10.1.1.20 db-server" >> /etc/hosts
@@ -64,25 +64,25 @@ compute_nodes:
       echo "10.1.1.253 dev-server" >> /etc/hosts
     zone: asia-southeast2-a
 
-  # - name: db-server
-  #   ip: 10.1.1.20
-  #   network: pac-subnet
-  #   has_internet: no
-  #   startup_script: | 
-  #     #! /bin/bash
-  #     apt update
-  #     apt -y install iputils-ping docker.io vim
-  #     echo "10.1.1.31 prod-server-1" >> /etc/hosts
-  #     echo "10.1.1.32 prod-server-2" >> /etc/hosts
-  #     echo "10.1.1.20 db-server" >> /etc/hosts
-  #     echo "10.1.1.10 lb-server" >> /etc/hosts
-  #     echo "10.1.1.253 dev-server" >> /etc/hosts
-  #     docker run --name mysql-db \
-  #       -e MYSQL_ROOT_PASSWORD=rootpass \
-  #       -e MYSQL_USER=dbuser \
-  #       -e MYSQL_PASSWORD=userpass \
-  #       -d mysql:8.0
-  #   zone: asia-southeast2-a
+  - name: db-server
+    ip: 10.1.1.20
+    network: pac-subnet
+    has_internet: yes
+    startup_script: | 
+      #! /bin/bash
+      apt update
+      apt -y install iputils-ping docker.io vim
+      echo "10.1.1.31 prod-server-1" >> /etc/hosts
+      echo "10.1.1.32 prod-server-2" >> /etc/hosts
+      echo "10.1.1.20 db-server" >> /etc/hosts
+      echo "10.1.1.10 lb-server" >> /etc/hosts
+      echo "10.1.1.253 dev-server" >> /etc/hosts
+      docker run --name mysql-db \
+        -e MYSQL_ROOT_PASSWORD=rootpass \
+        -e MYSQL_USER=dbuser \
+        -e MYSQL_PASSWORD=userpass \
+        -d mysql:8.0
+    zone: asia-southeast2-a
 
   - name: dev-server
     ip: 10.1.1.253
@@ -121,48 +121,61 @@ compute_nodes:
       echo "10.1.1.20 db-server" >> /etc/hosts
       echo "10.1.1.10 lb-server" >> /etc/hosts
       echo "10.1.1.253 dev-server" >> /etc/hosts
-      if ! grep -q dev_front haproxy.cfg; then cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.backup; fi
-      cp /etc/haproxy/haproxy.cfg.backup /etc/haproxy/haproxy.cfg
-      cat <<EOF >> /etc/haproxy/haproxy.cfg
+      # cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.backup
+      # cat <<EOF >> /etc/haproxy/haproxy.cfg
 
-      frontend dev_front
-          bind *:8080
-          mode http
-          default_backend dev_back
+      # frontend dev_front
+      #     bind *:8080
+      #     mode http
+      #     default_backend dev_back
 
-      backend dev_back
-          mode http
-          balance roundrobin
-          option forwardfor
-          http-request set-header X-Forwarded-Port %[dst_port]
-          http-request add-header X-Forwarded-Proto https if { ssl_fc }
-          option httpchk HEAD / HTTP/1.1rnHost:localhost
-          server dev-server 10.1.1.253:8080
+      # backend dev_back
+      #     mode http
+      #     balance roundrobin
+      #     option forwardfor
+      #     http-request set-header X-Forwarded-Port %[dst_port]
+      #     http-request add-header X-Forwarded-Proto https if { ssl_fc }
+      #     option httpchk HEAD / HTTP/1.1rnHost:localhost
+      #     server dev-server 10.1.1.253:8080
 
-      frontend prod_front
-          bind *:80
-          mode http
-          default_backend prod_back
+      # frontend prod_front
+      #     bind *:80
+      #     mode http
+      #     default_backend prod_back
 
-      backend prod_back
-          mode http
-          balance roundrobin
-          option forwardfor
-          http-request set-header X-Forwarded-Port %[dst_port]
-          http-request add-header X-Forwarded-Proto https if { ssl_fc }
-          option httpchk HEAD / HTTP/1.1rnHost:localhost
-          server prod-server-1 10.1.1.31:80
-          server prod-server-2 10.1.1.32:80
+      # backend prod_back
+      #     mode http
+      #     balance roundrobin
+      #     option forwardfor
+      #     http-request set-header X-Forwarded-Port %[dst_port]
+      #     http-request add-header X-Forwarded-Proto https if { ssl_fc }
+      #     option httpchk GET /healthz
+      #     server prod-server-1 10.1.1.31:80 check intr 1s
+      #     server prod-server-2 10.1.1.32:80 check intr 1s
 
-      listen stats
-          bind *:1234
-          stats enable
-          stats hide-version
-          stats refresh 30s
-          stats show-node
-          stats auth username:password
-          stats uri /stats
-      EOF
-      systemctl restart haproxy
+      # frontend redislab_fe
+      #     bind *:8001
+      #     mode http
+      #     default_backend redislab_be
+
+      # backend redislab_be
+      #     mode http
+      #     balance roundrobin
+      #     option forwardfor
+      #     http-request set-header X-Forwarded-Port %[dst_port]
+      #     http-request add-header X-Forwarded-Proto https if { ssl_fc }
+      #     option httpchk HEAD / HTTP/1.1rnHost:localhost
+      #     server db-server 10.1.1.20:8001 Check intr 1s
+
+      # listen stats
+      #     bind *:1234
+      #     stats enable
+      #     stats hide-version
+      #     stats refresh 30s
+      #     stats show-node
+      #     stats auth username:password
+      #     stats uri /stats
+      # EOF
+      # systemctl restart haproxy
 
     zone: asia-southeast2-a
