@@ -19,12 +19,12 @@
         name: gcp_net_build
       tags: gcp_net_build
     
-    - name: Build VM Instances
-      include_role:
-        name: gcp_vm_build
-      loop: "{{ compute_nodes }}"
-      loop_control:
-        loop_var: node
+    # - name: Build VM Instances
+    #   include_role:
+    #     name: gcp_vm_build
+    #   loop: "{{ compute_nodes }}"
+    #   loop_control:
+    #     loop_var: node
 
   handlers:
     - name: Clean tmp Decrypted Files

@@ -21,16 +21,16 @@
         project: "{{ project }}"
       register: gcp_vpc
     
-    - name: Terminate Instance {{ node.name }}
-      gcp_compute_instance:
-        name: "{{ node.name | regex_replace('_','-') }}"
-        zone: "{{ node.zone }}"
-        project: "{{ project }}"
-        state: present
-        status: RUNNING
-      loop: "{{ compute_nodes }}"
-      loop_control:
-        loop_var: node
+    # - name: Terminate Instance {{ node.name }}
+    #   gcp_compute_instance:
+    #     name: "{{ node.name | regex_replace('_','-') }}"
+    #     zone: "{{ node.zone }}"
+    #     project: "{{ project }}"
+    #     state: present
+    #     status: RUNNING
+    #   loop: "{{ compute_nodes }}"
+    #   loop_control:
+    #     loop_var: node
     
     - name: Check Cloud Nats Exists
       ansible.builtin.command: gcloud compute routers nats list --router={{ router_name }} --region=asia-southeast2
