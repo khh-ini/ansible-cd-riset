@@ -5,6 +5,7 @@
 An illustrative project aimed at exploring the capabilities of Ansible as a Continuous Delivery tool through a Zero Downtime Rolling Update scenario.
 
 This project leverages the following components:
+- GitHub
 - Ansible
 - Google Compute Engine
 - Jenkins
